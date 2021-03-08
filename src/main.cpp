@@ -6,14 +6,22 @@
 #include <ESP8266WiFi.h> // Importa a Biblioteca ESP8266WiFi
 #include <PubSubClient.h> // Importa a Biblioteca PubSubClient
 
+#define LOCK  D4
+#define BELL_BUTTON D3
+
 WiFiClient wifiClient;
-
 PubSubClient MQTT(wifiClient);
-
 Reader reader(D8, D0);
+String readTagStatus = "";
+unsigned int bellButtonStatus = LOW;
 
 void mqttCallback(char* topic, byte* paylod, unsigned int length) {
 
+}
+
+void setupPins() {
+	pinMode(D4, OUTPUT);
+	pinMode(D3, INPUT_PULLUP);
 }
 
 void initMqttClient() {
@@ -63,11 +71,25 @@ void setup() {
 	initMqttClient();
 }
 
+void sendClickBellButton() {}
+
+void sendTagRead(String tag) {}
+
 void loop() {
 	connectService();
-	String tagRead = reader.read();
-	if(!tagRead.equals("")) {
-		Serial.println(tagRead);
-		
+	MQTT.loop();
+
+	bellButtonStatus =  digitalRead(BELL_BUTTON);
+	if (bellButtonStatus == HIGH) {
+		sendClickBellButton();
+		return; 
 	}
+
+	readTagStatus = reader.read();
+	if(!readTagStatus.equals("")) {
+		Serial.println(readTagStatus);	
+		sendTagRead(readTagStatus);
+	}
+
+	
 }
